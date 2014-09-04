@@ -258,10 +258,10 @@ public class SBTRunMojo
                                 getLog().debug( "  Adding system property '" + arg + "'" );
                                 addSystemProperty( javaTask, key, value );
                             }
-                            else
+                            /*else
                             {
                                 // TODO - throw an exception
-                            }
+                            }*/
                         }
                     }
                 }
