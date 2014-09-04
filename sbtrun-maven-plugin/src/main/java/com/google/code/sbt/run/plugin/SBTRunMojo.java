@@ -68,13 +68,14 @@ public class SBTRunMojo
     @Parameter( property = "sbtrun.skip", defaultValue = "false" )
     private boolean skip;
 
-    /**
-     * Run in forked Java process.
-     * 
-     * @since 1.0.0
-     */
-    @Parameter( property = "sbtrun.fork", defaultValue = "true" )
-    private boolean fork;
+// Not ready yet
+//    /**
+//     * Run in forked Java process.
+//     * 
+//     * @since 1.0.0
+//     */
+//    @Parameter( property = "sbtrun.fork", defaultValue = "true" )
+//    private boolean fork;
 
     /**
      * Arguments
@@ -123,7 +124,9 @@ public class SBTRunMojo
     protected List<ArtifactRepository> remoteRepos;
 
     /**
-     * ...
+     * Launches SBT.
+     * 
+     * @throws MojoExecutionException if unexpected problem occurs
      */
     public void execute() throws MojoExecutionException
     {
@@ -141,17 +144,17 @@ public class SBTRunMojo
 
         try
         {
-        if ( fork )
-        {
-            Java javaTask = prepareAntJavaTask( fork );
+//        if ( fork )
+//        {
+            Java javaTask = prepareAntJavaTask( true/*fork*/ );
             javaTask.setFailonerror( true );
 
             JavaRunnable runner = new JavaRunnable( javaTask );
             // maybe just like this:
             getLog().info( "Launching SBT" );
             runner.run();
-            /*Thread t = new Th read( runner, "Play! Server runner" );
-            getLog().info( "Launching Play! Server" );
+            /*Thread t = new Thread( runner, "SBT runner" );
+            getLog().info( "Launching SBT" );
             t.start();
             try
             {
@@ -166,10 +169,10 @@ public class SBTRunMojo
             {
                 throw new MojoExecutionException( "?", runException );
             }
-        }
-        else // !fork
-        {
-            /*nie działa String[] argsArray = {};
+//        }
+//        else // !fork
+//        {
+            /*does not work String[] argsArray = {};
             if ( args != null )
             {
                 String trimmedArgs = args.trim();
@@ -180,21 +183,21 @@ public class SBTRunMojo
                 
             }
             xsbt.boot.Boot.main( argsArray );*/ // nie dziala uruchomione z classloaderem z Maven'a, trzeba podac inny, ale musi on miec parent'a
+//        }
         }
-        }
-        catch (ArtifactResolutionException e)
+        catch ( ArtifactResolutionException e )
         {
             throw new MojoExecutionException( "?", e );
         }
-        catch (ArtifactNotFoundException e)
+        catch ( ArtifactNotFoundException e )
         {
             throw new MojoExecutionException( "?", e );
         }
-        catch (InvalidDependencyVersionException e)
+        catch ( InvalidDependencyVersionException e )
         {
             throw new MojoExecutionException( "?", e );
         }
-        catch (ProjectBuildingException e)
+        catch ( ProjectBuildingException e )
         {
             throw new MojoExecutionException( "?", e );
         }
@@ -224,8 +227,8 @@ public class SBTRunMojo
                 jvmArgs = jvmArgs.trim();
                 if ( jvmArgs.length() > 0 )
                 {
-                    String[] args = jvmArgs.split( " " );
-                    for ( String arg : args )
+                    String[] jvmArgsArray = jvmArgs.split( " " );
+                    for ( String arg : jvmArgsArray )
                     {
                         javaTask.createJvmarg().setValue( arg );
                         getLog().debug( "  Adding jvmarg '" + arg + "'" );
@@ -241,8 +244,8 @@ public class SBTRunMojo
                 jvmArgs = jvmArgs.trim();
                 if ( jvmArgs.length() > 0 )
                 {
-                    String[] args = jvmArgs.split( " " );
-                    for ( String arg : args )
+                    String[] jvmArgsArray = jvmArgs.split( " " );
+                    for ( String arg : jvmArgsArray )
                     {
                         if ( arg.startsWith( "-D" ) )
                         {

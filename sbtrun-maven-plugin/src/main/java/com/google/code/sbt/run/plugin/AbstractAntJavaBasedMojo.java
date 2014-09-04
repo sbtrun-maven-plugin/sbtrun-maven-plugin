@@ -27,13 +27,13 @@ import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugins.annotations.Component;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.project.MavenProject;
+
 import org.apache.tools.ant.BuildLogger;
 import org.apache.tools.ant.NoBannerLogger;
 import org.apache.tools.ant.Project;
 import org.apache.tools.ant.ProjectHelper;
 import org.apache.tools.ant.taskdefs.Java;
 import org.apache.tools.ant.types.Environment;
-import org.apache.tools.ant.types.Path;
 
 /**
  * Base class for Ant Java task using mojos.
@@ -99,10 +99,10 @@ public abstract class AbstractAntJavaBasedMojo
 
     protected Project createProject()
     {
-        final Project project = new Project();
+        final Project result = new Project();
 
         final ProjectHelper helper = ProjectHelper.getProjectHelper();
-        project.addReference( ProjectHelper.PROJECTHELPER_REFERENCE, helper );
+        result.addReference( ProjectHelper.PROJECTHELPER_REFERENCE, helper );
         helper.getImportStack().addElement( "AntBuilder" ); // import checks that stack is not empty
 
         final BuildLogger logger = new NoBannerLogger();
@@ -111,11 +111,11 @@ public abstract class AbstractAntJavaBasedMojo
         logger.setOutputPrintStream( System.out );
         logger.setErrorPrintStream( System.err );
 
-        project.addBuildListener( logger );
+        result.addBuildListener( logger );
 
-        project.init();
-        project.getBaseDir();
-        return project;
+        result.init();
+        result.getBaseDir();
+        return result;
     }
 
     protected void addSystemProperty( Java java, String propertyName, String propertyValue )
