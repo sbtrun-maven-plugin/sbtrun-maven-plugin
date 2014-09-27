@@ -17,76 +17,61 @@
 
 package com.google.code.sbt.run.plugin;
 
-//import java.io.File;
-//import java.io.IOException;
-
-//import org.apache.maven.plugin.AbstractMojo;
 import java.io.File;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 import org.apache.maven.artifact.Artifact;
-import org.apache.maven.artifact.factory.ArtifactFactory;
-import org.apache.maven.artifact.repository.ArtifactRepository;
-import org.apache.maven.artifact.resolver.ArtifactNotFoundException;
-import org.apache.maven.artifact.resolver.ArtifactResolutionException;
-import org.apache.maven.artifact.resolver.ArtifactResolver;
-import org.apache.maven.artifact.resolver.filter.AndArtifactFilter;
-import org.apache.maven.artifact.resolver.filter.ArtifactFilter;
-import org.apache.maven.artifact.resolver.filter.ScopeArtifactFilter;
 import org.apache.maven.plugin.MojoExecutionException;
-import org.apache.maven.plugins.annotations.Component;
-//import org.apache.maven.plugins.annotations.Component;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
-import org.apache.maven.project.MavenProject;
-import org.apache.maven.project.MavenProjectBuilder;
-import org.apache.maven.project.ProjectBuildingException;
-import org.apache.maven.project.artifact.InvalidDependencyVersionException;
 
+import org.apache.tools.ant.BuildException;
 import org.apache.tools.ant.Project;
 import org.apache.tools.ant.taskdefs.Java;
 import org.apache.tools.ant.types.Path;
 
 /**
- * ...
+ * Run SBT
  * 
  * @author <a href="mailto:gslowikowski@gmail.com">Grzegorz Slowikowski</a>
  * @since 1.0.0
  */
 @Mojo( name = "run", requiresProject = false )
 public class SBTRunMojo
-    extends AbstractAntJavaBasedMojo/*AbstractMojo*/
+    extends AbstractAntJavaBasedMojo
 {
+    private static final String LAUNCHER_GROUP_ID = "com.typesafe.sbt";
+
+    private static final String LAUNCHER_ARTIFACT_ID = "sbt-launcher";
+
+    private static final String LAUNCHER_MAIN_CLASS = "xsbt.boot.Boot";
 
     /**
-     * Allows the server startup to be skipped.
+     * Allows SBT run to be skipped.
      * 
      * @since 1.0.0
      */
     @Parameter( property = "sbtrun.skip", defaultValue = "false" )
     private boolean skip;
 
-// Not ready yet
-//    /**
-//     * Run in forked Java process.
-//     * 
-//     * @since 1.0.0
-//     */
-//    @Parameter( property = "sbtrun.fork", defaultValue = "true" )
-//    private boolean fork;
+    /**
+     * SBT process working directory.
+     * 
+     * @since 1.0.0
+     */
+    @Parameter( property = "sbtrun.basedir", defaultValue = "${project.basedir}" )
+    private File basedir;
 
     /**
-     * Arguments
+     * SBT process arguments.
      * 
      * @since 1.0.0
      */
     @Parameter( property = "sbtrun.args", defaultValue = "" )
-     String args;
+    private String args;
 
     /**
-     * Additional JVM arguments passed to Play! server's JVM
+     * SBT process JVM arguments.
      * 
      * @since 1.0.0
      */
@@ -94,176 +79,108 @@ public class SBTRunMojo
     private String jvmArgs;
 
     /**
-     * Maven project builder used to resolve artifacts.
+     * SBT process execution timeout in milliseconds.
+     * 
+     * @since 1.0.0
      */
-    @Component
-    protected MavenProjectBuilder mavenProjectBuilder;
+    @Parameter( property = "sbtrun.timeout", defaultValue = "0" )
+    private int timeout;
 
     /**
-     * Artifact factory used to look up artifacts in the remote repository.
+     * List of artifacts this plugin depends on.
      */
-    @Component
-    protected ArtifactFactory factory;
+    @Parameter( property = "plugin.artifacts", required = true, readonly = true )
+    private List<Artifact> pluginArtifacts;
 
     /**
-     * Artifact resolver used to resolve artifacts.
-     */
-    @Component
-    protected ArtifactResolver resolver;
-
-    /**
-     * Location of the local repository.
-     */
-    @Parameter( property = "localRepository", readonly = true, required = true )
-    protected ArtifactRepository localRepo;
-
-    /**
-     * Remote repositories used by the resolver
-     */
-    @Parameter( property = "project.remoteArtifactRepositories", readonly = true, required = true )
-    protected List<ArtifactRepository> remoteRepos;
-
-    /**
-     * Launches SBT.
+     * Launches SBT process.
      * 
      * @throws MojoExecutionException if unexpected problem occurs
      */
+    @Override
     public void execute() throws MojoExecutionException
     {
         if ( skip )
         {
-            // add log message
+            getLog().info( "Skipping SBT execution" );
             return;
         }
         
-        //????
-        if ( "pom".equals( project.getPackaging() ) )
+        Java javaTask = prepareAntJavaTask();
+
+        getLog().debug( "Launching SBT" );
+
+        if ( timeout <= 0 )
         {
-            return;
+            try
+            {
+                javaTask.execute();
+            }
+            catch ( BuildException e )
+            {
+                throw new MojoExecutionException( "SBT execution exception", e );
+            }
         }
-
-        try
+        else
         {
-//        if ( fork )
-//        {
-            Java javaTask = prepareAntJavaTask( true/*fork*/ );
-            javaTask.setFailonerror( true );
-
-            JavaRunnable runner = new JavaRunnable( javaTask );
-            // maybe just like this:
-            getLog().info( "Launching SBT" );
-            runner.run();
-            /*Thread t = new Thread( runner, "SBT runner" );
-            getLog().info( "Launching SBT" );
+            JavaRunnable runnable = new JavaRunnable( javaTask );
+            Thread t = new Thread( runnable, "SBT runner" );
+            t.setDaemon( true );
             t.start();
             try
             {
-                t.join(); // waiting for Ctrl+C if forked, joins immediately if not forking
+                t.join( timeout );
             }
             catch ( InterruptedException e )
             {
-                throw new MojoExecutionException( "?", e );
-            }*/
-            Exception runException = runner.getException();
-            if ( runException != null )
-            {
-                throw new MojoExecutionException( "?", runException );
+                t.interrupt();
+                throw new MojoExecutionException( "SBT runner interrupted", e );
             }
-//        }
-//        else // !fork
-//        {
-            /*does not work String[] argsArray = {};
-            if ( args != null )
+            BuildException runnerException = runnable.getException();
+            if ( runnerException != null )
             {
-                String trimmedArgs = args.trim();
-                if ( !trimmedArgs.isEmpty() )
-                {
-                    argsArray = trimmedArgs.split( " " );
-                }
-                
+                // If there is an exception, the thread is not alive anymore
+                throw new MojoExecutionException( "SBT runner exception", runnerException );
             }
-            xsbt.boot.Boot.main( argsArray );*/ // nie dziala uruchomione z classloaderem z Maven'a, trzeba podac inny, ale musi on miec parent'a
-//        }
-        }
-        catch ( ArtifactResolutionException e )
-        {
-            throw new MojoExecutionException( "?", e );
-        }
-        catch ( ArtifactNotFoundException e )
-        {
-            throw new MojoExecutionException( "?", e );
-        }
-        catch ( InvalidDependencyVersionException e )
-        {
-            throw new MojoExecutionException( "?", e );
-        }
-        catch ( ProjectBuildingException e )
-        {
-            throw new MojoExecutionException( "?", e );
+            if ( !runnable.isExecuted() ) // Thread still alive
+            {
+                t.interrupt();
+                throw new MojoExecutionException( "SBT runner timed out" );
+            }
         }
     }
 
-    protected Java prepareAntJavaTask( boolean fork )
-        throws ArtifactResolutionException, ArtifactNotFoundException, InvalidDependencyVersionException, ProjectBuildingException//, IOException
+    private Java prepareAntJavaTask()
+        throws MojoExecutionException
     {
-        File baseDir = project.getBasedir();
-
         Project antProject = createProject();
         Path classPath = getProjectClassPath( antProject );
 
         Java javaTask = new Java();
         javaTask.setTaskName( "sbt" );
         javaTask.setProject( antProject );
-        javaTask.setClassname( "xsbt.boot.Boot" );
+        javaTask.setClassname( LAUNCHER_MAIN_CLASS );
         javaTask.setClasspath( classPath );
-        javaTask.setFork( fork );
+        javaTask.setFork( true );
         javaTask.createArg().setLine( args );
-        if ( fork )
-        {
-            javaTask.setDir( baseDir );
+        javaTask.setDir( basedir != null ? basedir : new File( "." ) );
+        javaTask.setFailonerror( true );
 
-            if ( jvmArgs != null )
-            {
-                jvmArgs = jvmArgs.trim();
-                if ( jvmArgs.length() > 0 )
-                {
-                    String[] jvmArgsArray = jvmArgs.split( " " );
-                    for ( String arg : jvmArgsArray )
-                    {
-                        javaTask.createJvmarg().setValue( arg );
-                        getLog().debug( "  Adding jvmarg '" + arg + "'" );
-                    }
-                }
-            }
-        }
-        else
+        // Workaround for https://github.com/jline/jline2/issues/103
+        String internalArg = "-Djline.WindowsTerminal.directConsole=false";
+        javaTask.createJvmarg().setValue( internalArg );
+        getLog().debug( "  Adding jvmarg '" + internalArg + "'" );
+
+        if ( jvmArgs != null )
         {
-            // find and add all system properties in "jvmArgs"
-            if ( jvmArgs != null )
+            jvmArgs = jvmArgs.trim();
+            if ( jvmArgs.length() > 0 )
             {
-                jvmArgs = jvmArgs.trim();
-                if ( jvmArgs.length() > 0 )
+                String[] jvmArgsArray = jvmArgs.split( " " );
+                for ( String arg : jvmArgsArray )
                 {
-                    String[] jvmArgsArray = jvmArgs.split( " " );
-                    for ( String arg : jvmArgsArray )
-                    {
-                        if ( arg.startsWith( "-D" ) )
-                        {
-                            arg = arg.substring( 2 );
-                            int p = arg.indexOf( '=' );
-                            if ( p >= 0 )
-                            {
-                                String key = arg.substring( 0, p );
-                                String value = arg.substring( p + 1 );
-                                getLog().debug( "  Adding system property '" + arg + "'" );
-                                addSystemProperty( javaTask, key, value );
-                            }
-                            /*else
-                            {
-                                // TODO - throw an exception
-                            }*/
-                        }
-                    }
+                    javaTask.createJvmarg().setValue( arg );
+                    getLog().debug( "  Adding jvmarg '" + arg + "'" );
                 }
             }
         }
@@ -271,111 +188,36 @@ public class SBTRunMojo
     }
 
     private Path getProjectClassPath( Project antProject )
-        throws ArtifactResolutionException, ArtifactNotFoundException, InvalidDependencyVersionException, ProjectBuildingException//, IOException
+        throws MojoExecutionException
     {
-        Artifact launcherArtifact =
-            getResolvedArtifact( "com.google.code.sbtrun-maven-plugin.org.scala-sbt", "launcher", "0.13.5" );
-            //getPluginArtifact( "com.google.code.sbtrun-maven-plugin.org.scala-sbt",
-            //               "launcher", "jar" );
-        Set<Artifact> launcherDependencies = getAllDependencies( launcherArtifact );
+        Artifact resolvedLauncherArtifact = getPluginArtifact( LAUNCHER_GROUP_ID, LAUNCHER_ARTIFACT_ID, "jar" );
 
         Path classPath = new Path( antProject );
-        classPath.createPathElement().setLocation( launcherArtifact.getFile() );
-        for ( Artifact dependencyArtifact: launcherDependencies )
-        {
-            getLog().debug( String.format( "CP: %s:%s:%s (%s)", dependencyArtifact.getGroupId(),
-                                           dependencyArtifact.getArtifactId(), dependencyArtifact.getType(),
-                                           dependencyArtifact.getScope() ) );
-            classPath.createPathElement().setLocation( dependencyArtifact.getFile() );
-        }
-//                    classPath.createPathElement().setLocation( getPluginArtifact( "com.google.code.sbtrun-maven-plugin.org.scala-sbt",
-//                                                                                  "launcher", "jar" ).getFile() );
+        classPath.createPathElement().setLocation( resolvedLauncherArtifact.getFile() );
 
-                    /*??? Artifact projectArtifact = getProject().getArtifact();
-                    File projectArtifactFile = projectArtifact.getFile();
-                    if ( projectArtifactFile == null )
-                    {
-                        File classesDirectory = new File( getProject().getBuild().getOutputDirectory() );
-                        if ( !classesDirectory.isDirectory() )
-                        {
-                            throw new MojoExecutionException( "Project artifact file not available" ); // TODO improve message
-                        }
-                        projectArtifactFile = classesDirectory;
-                        // TODO - add warning, that classes may be not up to date
-                    }
-                    getLog().debug( String.format( "CP: %s:%s:%s (%s)", projectArtifact.getGroupId(),
-                                                   projectArtifact.getArtifactId(), projectArtifact.getType(),
-                                                   projectArtifact.getScope() ) );
-                    classPath.createPathElement().setLocation( projectArtifactFile );
-
-                    Set<?> classPathArtifacts = getProject().getArtifacts();
-                    for ( Iterator<?> iter = classPathArtifacts.iterator(); iter.hasNext(); )
-                    {
-                        Artifact artifact = (Artifact) iter.next();
-                        getLog().debug( String.format( "CP: %s:%s:%s (%s)", artifact.getGroupId(), artifact.getArtifactId(),
-                                                       artifact.getType(), artifact.getScope() ) );
-                        classPath.createPathElement().setLocation( artifact.getFile() );
-                    }????*/
         return classPath;
     }
 
-    // Private utility methods
-
-    private Artifact getResolvedArtifact( String groupId, String artifactId, String version )
-        throws ArtifactNotFoundException, ArtifactResolutionException
+    private Artifact getPluginArtifact( String groupId, String artifactId, String type )
+        throws MojoExecutionException
     {
-        Artifact artifact = factory.createArtifact( groupId, artifactId, version, Artifact.SCOPE_RUNTIME, "jar" );
-        resolver.resolve( artifact, remoteRepos, localRepo );
-        return artifact;
-    }
-
-    private Set<Artifact> getAllDependencies( Artifact artifact )
-        throws ArtifactNotFoundException, ArtifactResolutionException, InvalidDependencyVersionException,
-        ProjectBuildingException
-    {
-        Set<Artifact> result = new HashSet<Artifact>();
-        MavenProject p = mavenProjectBuilder.buildFromRepository( artifact, remoteRepos, localRepo );
-        Set<Artifact> d = resolveDependencyArtifacts( p );
-        result.addAll( d );
-        for ( Artifact dependency : d )
+        Artifact result = null;
+        for ( Artifact artifact : pluginArtifacts )
         {
-            Set<Artifact> transitive = getAllDependencies( dependency );
-            result.addAll( transitive );
+            if ( artifact.getGroupId().equals( groupId ) && artifact.getArtifactId().equals( artifactId )
+                && type.equals( artifact.getType() ) )
+            {
+                result = artifact;
+                break;
+            }
+        }
+        if ( result == null )
+        {
+            throw new MojoExecutionException(
+                                              String.format( "Unable to locate '%s:%s' in the list of plugin artifacts",
+                                                             groupId, artifactId ) );
         }
         return result;
-    }
-
-    /**
-     * This method resolves the dependency artifacts from the project.
-     * 
-     * @param theProject The POM.
-     * @return resolved set of dependency artifacts.
-     * @throws ArtifactResolutionException
-     * @throws ArtifactNotFoundException
-     * @throws InvalidDependencyVersionException
-     */
-    private Set<Artifact> resolveDependencyArtifacts( MavenProject theProject )
-        throws ArtifactNotFoundException, ArtifactResolutionException, InvalidDependencyVersionException
-    {
-        AndArtifactFilter filter = new AndArtifactFilter();
-        filter.add( new ScopeArtifactFilter( Artifact.SCOPE_TEST ) );
-        filter.add( new NonOptionalArtifactFilter() );
-        // TODO follow the dependenciesManagement and override rules
-        Set<Artifact> artifacts = theProject.createArtifacts( factory, Artifact.SCOPE_RUNTIME, filter );
-        for ( Artifact artifact : artifacts )
-        {
-            resolver.resolve( artifact, remoteRepos, localRepo );
-        }
-        return artifacts;
-    }
-
-    private static class NonOptionalArtifactFilter
-        implements ArtifactFilter
-    {
-        public boolean include( Artifact artifact )
-        {
-            return !artifact.isOptional();
-        }
     }
 
 }

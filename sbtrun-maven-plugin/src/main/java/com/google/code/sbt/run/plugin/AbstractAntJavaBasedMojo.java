@@ -18,16 +18,10 @@
 package com.google.code.sbt.run.plugin;
 
 import java.io.File;
-//import java.io.IOException;
-import java.util.List;
 
-import org.apache.maven.artifact.Artifact;
 import org.apache.maven.plugin.AbstractMojo;
-import org.apache.maven.plugin.MojoExecutionException;
-import org.apache.maven.plugins.annotations.Component;
-import org.apache.maven.plugins.annotations.Parameter;
-import org.apache.maven.project.MavenProject;
 
+import org.apache.tools.ant.BuildException;
 import org.apache.tools.ant.BuildLogger;
 import org.apache.tools.ant.NoBannerLogger;
 import org.apache.tools.ant.Project;
@@ -45,34 +39,50 @@ public abstract class AbstractAntJavaBasedMojo
 {
 
     /**
-     * Maven project to interact with.
-     */
-    @Component
-    protected MavenProject project;
-
-    /**
-     * List of artifacts this plugin depends on.
-     */
-    @Parameter( property = "plugin.artifacts", required = true, readonly = true )
-    private List<Artifact> pluginArtifacts;
-    /**
-     * Internal runnable wrapper for Ant Java task.
+     * Internal Runnable wrapper for Ant Java task execution in separate thread.
      */
     protected static class JavaRunnable
         implements Runnable
     {
         private Java java;
 
-        private Exception exception;
+        private boolean executed;
 
+        private BuildException exception;
+
+        /**
+         * Creates Runnable for given Ant Java task.
+         * 
+         * @param java Java task to be run
+         */
         public JavaRunnable( Java java )
         {
             this.java = java;
         }
 
-        public Exception getException()
+        /**
+         * Returns information if execution has already finished.
+         * 
+         * @return true if execution finished
+         */
+        public boolean isExecuted()
         {
-            Exception result = null;
+            boolean result;
+            synchronized ( this )
+            {
+                result = executed;
+            }
+            return result;
+        }
+
+        /**
+         * Returns execution exception if it has been thrown.
+         * 
+         * @return exception if it has been thrown
+         */
+        public BuildException getException()
+        {
+            BuildException result = null;
             synchronized ( this )
             {
                 result = exception;
@@ -86,17 +96,27 @@ public abstract class AbstractAntJavaBasedMojo
             try
             {
                 java.execute();
+                synchronized ( this )
+                {
+                    this.executed = true;
+                }
             }
-            catch ( Exception e )
+            catch ( BuildException e )
             {
                 synchronized ( this )
                 {
+                    this.executed = true;
                     this.exception = e;
                 }
             }
         }
     }
 
+    /**
+     * Creates and configures Ant project for Java task.
+     * 
+     * @return Ant project for Java task
+     */
     protected Project createProject()
     {
         final Project result = new Project();
@@ -114,10 +134,17 @@ public abstract class AbstractAntJavaBasedMojo
         result.addBuildListener( logger );
 
         result.init();
-        result.getBaseDir();
+        result.setDefaultInputStream( System.in ); // for interactive commands, like "shell", needs more work!
         return result;
     }
 
+    /**
+     * Adds string type system property to Ant Java task.
+     * 
+     * @param java Ant Java task
+     * @param propertyName system property name
+     * @param propertyValue system property value
+     */
     protected void addSystemProperty( Java java, String propertyName, String propertyValue )
     {
         Environment.Variable sysPropPlayHome = new Environment.Variable();
@@ -126,35 +153,19 @@ public abstract class AbstractAntJavaBasedMojo
         java.addSysproperty( sysPropPlayHome );
     }
 
+    /**
+     * Adds file type system property to Ant Java task.
+     * 
+     * @param java Ant Java task
+     * @param propertyName system property name
+     * @param propertyValue system property value
+     */
     protected void addSystemProperty( Java java, String propertyName, File propertyValue )
     {
         Environment.Variable sysPropPlayHome = new Environment.Variable();
         sysPropPlayHome.setKey( propertyName );
         sysPropPlayHome.setFile( propertyValue );
         java.addSysproperty( sysPropPlayHome );
-    }
-
-    //tymczasowo? jezeli nie, to ta metoda ma byc tutaj?
-    protected Artifact getPluginArtifact( String groupId, String artifactId, String type )
-        throws MojoExecutionException
-    {
-        Artifact result = null;
-        for ( Artifact artifact : pluginArtifacts )
-        {
-            if ( artifact.getGroupId().equals( groupId ) && artifact.getArtifactId().equals( artifactId )
-                && type.equals( artifact.getType() ) )
-            {
-                result = artifact;
-                break;
-            }
-        }
-        if ( result == null )
-        {
-            throw new MojoExecutionException(
-                                              String.format( "Unable to locate '%s:%s' in the list of plugin artifacts",
-                                                             groupId, artifactId ) );
-        }
-        return result;
     }
 
 }
