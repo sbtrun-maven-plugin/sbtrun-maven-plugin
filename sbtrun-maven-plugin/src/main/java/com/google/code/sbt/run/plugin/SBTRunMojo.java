@@ -30,6 +30,8 @@ import org.apache.tools.ant.Project;
 import org.apache.tools.ant.taskdefs.Java;
 import org.apache.tools.ant.types.Path;
 
+import org.codehaus.plexus.util.Os;
+
 /**
  * Run SBT
  * 
@@ -167,9 +169,12 @@ public class SBTRunMojo
         javaTask.setFailonerror( true );
 
         // Workaround for https://github.com/jline/jline2/issues/103
-        String internalArg = "-Djline.WindowsTerminal.directConsole=false";
-        javaTask.createJvmarg().setValue( internalArg );
-        getLog().debug( "  Adding jvmarg '" + internalArg + "'" );
+        if ( Os.isFamily( Os.FAMILY_WINDOWS ) )
+        {
+            String jvmArg = "-Djline.WindowsTerminal.directConsole=false";
+            javaTask.createJvmarg().setValue( jvmArg );
+            getLog().debug( "  Adding jvmarg '" + jvmArg + "'" );
+        }
 
         if ( jvmArgs != null )
         {
@@ -177,10 +182,10 @@ public class SBTRunMojo
             if ( jvmArgs.length() > 0 )
             {
                 String[] jvmArgsArray = jvmArgs.split( " " );
-                for ( String arg : jvmArgsArray )
+                for ( String jvmArg : jvmArgsArray )
                 {
-                    javaTask.createJvmarg().setValue( arg );
-                    getLog().debug( "  Adding jvmarg '" + arg + "'" );
+                    javaTask.createJvmarg().setValue( jvmArg );
+                    getLog().debug( "  Adding jvmarg '" + jvmArg + "'" );
                 }
             }
         }
