@@ -39,7 +39,7 @@ under the License.
     <properties>
         <ant.version>1.9.4</ant.version>
         <maven.version>2.2.1</maven.version>
-        <maven-plugin-plugin.version>3.3</maven-plugin-plugin.version>
+        <maven-plugin-plugin.version>3.4</maven-plugin-plugin.version>
         <sbt-launcher.version>0.13.6</sbt-launcher.version>
     </properties>
 
