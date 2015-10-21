@@ -34,17 +34,18 @@ under the License.
     <name>SBT Runner</name>
     <description>SBT Runner</description>
     <inceptionYear>2014</inceptionYear>
-    <url>https://sbtrun-maven-plugin.googlecode.com/svn/mavensite/${project.version}/</url>
+    <url>https://sbtrun-maven-plugin.github.io/</url>
 
     <scm>
-        <connection>scm:svn:http://sbtrun-maven-plugin.googlecode.com/svn/trunk/plugin/</connection>
-        <developerConnection>scm:svn:https://sbtrun-maven-plugin.googlecode.com/svn/trunk/plugin/</developerConnection>
-        <url>http://sbtrun-maven-plugin.googlecode.com/svn/trunk/plugin/</url>
+        <connection>scm:git:git://github.com/sbtrun-maven-plugin/sbtrun-maven-plugin.git</connection>
+        <developerConnection>scm:git:git@github.com:sbtrun-maven-plugin/sbtrun-maven-plugin.git</developerConnection>
+        <url>https://github.com/sbtrun-maven-plugin/sbtrun-maven-plugin/tree/${project.scm.tag}</url>
+        <tag>HEAD</tag>
     </scm>
 
     <issueManagement>
-        <system>Google Project Hosting</system>
-        <url>http://code.google.com/p/sbtrun-maven-plugin/issues/</url>
+        <system>GitHub Issues</system>
+        <url>https://github.com/sbtrun-maven-plugin/sbtrun-maven-plugin/issues</url>
     </issueManagement>
 
     <developers>
