@@ -1,3 +1,11 @@
 language: java
-jdk:
-   - oraclejdk7
+
+cache:
+  directories:
+    - $HOME/.m2
+
+install: mvn dependency:resolve-plugins dependency:resolve -e
+
+script: mvn clean verify -e
+
+jdk: oraclejdk7
