@@ -168,6 +168,13 @@ public class SBTRunMojo
         javaTask.setDir( basedir != null ? basedir : new File( "." ) );
         javaTask.setFailonerror( true );
 
+        if ( getLog().isDebugEnabled() )
+        {
+            String arg = "--debug";
+            javaTask.createArg().setValue( arg );
+            getLog().debug( "  Adding arg '" + arg + "'" );
+        }
+
         // Workaround for https://github.com/jline/jline2/issues/103
         if ( Os.isFamily( Os.FAMILY_WINDOWS ) )
         {
