@@ -1,0 +1,134 @@
+#set($h1 = '#')
+#set($h2 = '##')
+#set($h3 = '###')
+#set($h4 = '####')
+#if($project.version.endsWith("SNAPSHOT"))
+#set($testProjectsGitBranch = 'master')
+#else
+#set($testProjectsGitBranch = "test-projects-${project.version}")
+#end
+
+$h2 Usage
+
+This example shows, how to configure plugin to process web assets using [SBT Web Plugin](https://github.com/sbt/sbt-web)
+(and add them to project resources) in [Play! Framework](https://playframework.com/) project.
+
+$h3 Adding plugin
+
+```
+<project>
+    ...
+    <build>
+        ...
+        <plugins>
+            ...
+            <plugin>
+                <groupId>com.google.code.sbtrun-maven-plugin</groupId>
+                <artifactId>sbtrun-maven-plugin</artifactId>
+                <version>${project.version}</version>
+                <executions>
+                    <execution>
+                        <id>compile-assets</id>
+                        <phase>generate-resources</phase>
+                        <goals>
+                            <goal>run</goal>
+                        </goals>
+                        <configuration>
+                            <args>web-assets:assets</args>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>build-helper-maven-plugin</artifactId>
+                <version>${buildHelperPluginVersion}</version>
+                <executions>
+                    <execution>
+                        <id>add-web-assets-to-resources</id>
+                        <phase>generate-resources</phase>
+                        <goals>
+                            <goal>add-resource</goal>
+                        </goals>
+                        <configuration>
+                            <resources>
+                                <resource>
+                                    <directory>\${project.build.directory}/sbt/web/public/main</directory>
+                                    <targetPath>public</targetPath>
+                                </resource>
+                            </resources>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+</project>
+```
+
+$h3 Adding SBT build files
+
+- `build.sbt` file
+
+```
+scalaVersion := "${scalaVersion}"
+
+lazy val main = (project in file("."))
+  .enablePlugins(SbtWeb)
+  .settings(
+    sourceDirectory in Assets := baseDirectory.value / "app/assets",
+    resourceDirectory in Assets := baseDirectory.value / "public",
+    target := baseDirectory.value / "target/sbt"
+  )
+```
+
+- `project/build.properties` file
+
+```
+sbt.version=${sbtVersion}
+```
+
+- `project/plugins.sbt` file
+
+```
+// Comment to get more information during initialization
+logLevel := Level.Warn
+
+// The Typesafe repository
+resolvers += Resolver.typesafeRepo("releases")
+
+addSbtPlugin("com.typesafe.sbt" % "sbt-web" % "${sbtWebVersion}")
+
+addSbtPlugin("com.typesafe.sbt" % "sbt-coffeescript" % "${sbtCoffeescriptVersion}")
+
+addSbtPlugin("com.typesafe.sbt" % "sbt-less" % "${sbtLessVersion}")
+```
+
+$h3 Running
+
+Run `mvn process-resources`. Console output will look like below. 
+
+```
+[INFO] --- sbtrun-maven-plugin:${project.version}:run (compile-assets) @ zentasks ---
+      [sbt] [info] Loading project definition from path/to/the/project/project
+      [sbt] [info] Set current project to main (in build file:/path/to/the/project/)
+      [sbt] [info] Updating {file:/path/to/the/project/}main...
+      [sbt] [info] Resolving org.scala-lang#scala-library;2.11.7 ...
+      [sbt] [info] Resolving org.scala-lang#scala-compiler;2.11.7 ...
+      [sbt] [info] Resolving org.scala-lang#scala-reflect;2.11.7 ...
+      [sbt] [info] Resolving org.scala-lang.modules#scala-xml_2.11;1.0.4 ...
+      [sbt] [info] Resolving org.scala-lang.modules#scala-parser-combinators_2.11;1.0.4 ...
+      [sbt] [info] Resolving jline#jline;2.12.1 ...
+      [sbt] [info] Done updating.
+      [sbt] [info] LESS compiling on 2 source(s)
+      [sbt] [info] CoffeeScript compiling on 1 source(s)
+      [sbt] [success] Total time: 30 s, completed 2015-12-15 15:02:32
+[INFO] 
+[INFO] --- build-helper-maven-plugin:${buildHelperPluginVersion}:add-resource (add-web-assets-to-resources) @ zentasks ---
+[INFO] 
+```
+
+and processed web assets will be stored in `\${project.build.directory}/classes/public` directory.
+
+For complete example projects go to [SBT Runner test projects](https://github.com/sbtrun-maven-plugin/sbtrun-maven-test-projects/tree/$testProjectsGitBranch/).

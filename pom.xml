@@ -324,6 +324,16 @@ under the License.
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-site-plugin</artifactId>
                     <version>3.4</version>
+                    <configuration>
+                        <attributes>
+                            <buildHelperPluginVersion>1.9.1</buildHelperPluginVersion>
+                            <sbtVersion>0.13.9</sbtVersion>
+                            <sbtCoffeescriptVersion>1.0.0</sbtCoffeescriptVersion>
+                            <sbtLessVersion>1.0.6</sbtLessVersion>
+                            <sbtWebVersion>1.2.2</sbtWebVersion>
+                            <scalaVersion>2.11.7</scalaVersion>
+                        </attributes>
+                    </configuration>
                     <dependencies>
                         <dependency>
                             <groupId>org.apache.maven.doxia</groupId>
