@@ -4,7 +4,10 @@ cache:
   directories:
     - $HOME/.m2
 
-install: mvn dependency:resolve-plugins dependency:resolve -e
+install:
+  - java -XX:+PrintFlagsFinal -version
+  - mvn --version
+  - mvn dependency:resolve-plugins dependency:resolve -e
 
 script: mvn clean verify -e
 
