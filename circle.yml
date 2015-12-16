@@ -2,14 +2,15 @@ machine:
   environment:
     _JAVA_OPTIONS: "-Xms512m -Xmx1024m"
   java:
-    version: oraclejdk7
+    version: oraclejdk6
 
 dependencies:
   override: 
     - java -XX:+PrintFlagsFinal -version
     - mvn --version
-    - mvn dependency:resolve-plugins dependency:resolve -e
+    - mvn dependency:resolve-plugins --update-snapshots --settings .travis.settings.xml -e
+    - mvn dependency:resolve --update-snapshots --settings .travis.settings.xml -e
 
 test:
   override: 
-    - mvn clean verify -e
+    - mvn clean verify --update-snapshots --settings .travis.settings.xml -e
