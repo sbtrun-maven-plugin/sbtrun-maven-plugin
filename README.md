@@ -6,8 +6,8 @@ Project migrated from [Google Code](https://code.google.com/p/sbtrun-maven-plugi
 
 [![Join the chat at https://gitter.im/sbtrun-maven-plugin/sbtrun-maven-plugin](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/sbtrun-maven-plugin/sbtrun-maven-plugin?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
-[![Build Status](https://travis-ci.org/sbtrun-maven-plugin/sbtrun-maven-plugin.png)](https://travis-ci.org/sbtrun-maven-plugin/sbtrun-maven-plugin)
-[![Build Status](https://circleci.com/gh/sbtrun-maven-plugin/sbtrun-maven-plugin.svg?&style=shield)](https://circleci.com/gh/sbtrun-maven-plugin/sbtrun-maven-plugin)
+[![Build Status](https://travis-ci.org/sbtrun-maven-plugin/sbtrun-maven-plugin.png?branch=master)](https://travis-ci.org/sbtrun-maven-plugin/sbtrun-maven-plugin)
+[![Build Status](https://circleci.com/gh/sbtrun-maven-plugin/sbtrun-maven-plugin/tree/master.svg?&style=shield)](https://circleci.com/gh/sbtrun-maven-plugin/sbtrun-maven-plugin)
 [![License](http://img.shields.io/:license-Apache%202-red.svg)](http://www.apache.org/licenses/LICENSE-2.0.txt)
 [![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.google.code.sbtrun-maven-plugin/sbtrun-maven-plugin/badge.png?style=flat)](http://search.maven.org/#search|ga|1|g%3A%22com.google.code.sbtrun-maven-plugin%22%20AND%20a%3A%22sbtrun-maven-plugin%22)
 
