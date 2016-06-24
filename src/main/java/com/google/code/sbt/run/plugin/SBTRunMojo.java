@@ -48,6 +48,8 @@ public class SBTRunMojo
 
     private static final String LAUNCHER_MAIN_CLASS = "xsbt.boot.Boot";
 
+    private static final String SBT_QUIT_COMMAND = "q";
+
     /**
      * Allows SBT run to be skipped.
      * 
@@ -167,6 +169,7 @@ public class SBTRunMojo
         javaTask.createArg().setLine( args );
         javaTask.setDir( basedir != null ? basedir : new File( "." ) );
         javaTask.setFailonerror( true );
+        javaTask.setInputString( SBT_QUIT_COMMAND ); // automatically choose "quit" option in case of error prompt
 
         if ( getLog().isDebugEnabled() )
         {
