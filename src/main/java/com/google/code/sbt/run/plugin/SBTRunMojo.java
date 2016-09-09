@@ -206,7 +206,10 @@ public class SBTRunMojo
         throws MojoExecutionException
     {
         Artifact resolvedLauncherArtifact = getPluginArtifact( LAUNCHER_GROUP_ID, LAUNCHER_ARTIFACT_ID, "jar" );
-        Artifact resolvedConfigArtifact = getPluginArtifact( "com.google.code.sbtrun-maven-plugin", "sbtrun-maven-plugin", "maven-plugin" ); // contains "sbt.boot.properties" resource
+
+        // contains "sbt.boot.properties" resource
+        Artifact resolvedConfigArtifact =
+            getPluginArtifact( "com.google.code.sbtrun-maven-plugin", "sbtrun-maven-plugin", "maven-plugin" );
 
         Path classPath = new Path( antProject );
         classPath.createPathElement().setLocation( resolvedLauncherArtifact.getFile() );
