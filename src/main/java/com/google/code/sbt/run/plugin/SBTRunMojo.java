@@ -42,9 +42,9 @@ import org.codehaus.plexus.util.Os;
 public class SBTRunMojo
     extends AbstractAntJavaBasedMojo
 {
-    private static final String LAUNCHER_GROUP_ID = "com.typesafe.sbt";
+    private static final String LAUNCHER_GROUP_ID = "org.scala-sbt";
 
-    private static final String LAUNCHER_ARTIFACT_ID = "sbt-launcher";
+    private static final String LAUNCHER_ARTIFACT_ID = "launcher";
 
     private static final String LAUNCHER_MAIN_CLASS = "xsbt.boot.Boot";
 
@@ -206,9 +206,11 @@ public class SBTRunMojo
         throws MojoExecutionException
     {
         Artifact resolvedLauncherArtifact = getPluginArtifact( LAUNCHER_GROUP_ID, LAUNCHER_ARTIFACT_ID, "jar" );
+        Artifact resolvedConfigArtifact = getPluginArtifact( "com.google.code.sbtrun-maven-plugin", "sbtrun-maven-plugin", "maven-plugin" ); // contains "sbt.boot.properties" resource
 
         Path classPath = new Path( antProject );
         classPath.createPathElement().setLocation( resolvedLauncherArtifact.getFile() );
+        classPath.createPathElement().setLocation( resolvedConfigArtifact.getFile() );
 
         return classPath;
     }

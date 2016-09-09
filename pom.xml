@@ -84,8 +84,6 @@ under the License.
         <ant.version>1.9.4</ant.version>
         <maven.version>2.2.1</maven.version>
         <maven-plugin-plugin.version>3.4</maven-plugin-plugin.version>
-
-        <sbt-launcher.version>0.13.6</sbt-launcher.version>
     </properties>
 
     <dependencies>
@@ -96,16 +94,10 @@ under the License.
         </dependency>
 
         <dependency>
-            <groupId>com.typesafe.sbt</groupId>
-            <artifactId>sbt-launcher</artifactId>
-            <version>${sbt-launcher.version}</version>
+            <groupId>org.scala-sbt</groupId>
+            <artifactId>launcher</artifactId>
+            <version>1.0.0</version>
             <scope>runtime</scope>
-            <exclusions>
-                <exclusion>
-                    <groupId>org.scala-lang</groupId>
-                    <artifactId>scala-library</artifactId>
-                </exclusion>
-            </exclusions>
         </dependency>
 
         <!-- Maven -->
