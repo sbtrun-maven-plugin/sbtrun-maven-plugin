@@ -94,6 +94,9 @@ public class SBTRunMojo
     /**
      * SBT process execution timeout in milliseconds.
      * <br>
+     * <br>
+     * Value less or equal zero means no timeout.
+     * <br>
      * 
      * @since 1.0.0
      */
