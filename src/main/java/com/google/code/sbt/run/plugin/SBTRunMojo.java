@@ -59,7 +59,13 @@ public class SBTRunMojo
     private boolean skip;
 
     /**
-     * SBT process working directory.
+     * SBT base directory (containing {@code build.sbt} file).
+     * <br>
+     * <br>
+     * In single-module projects must point to Maven project base directory.
+     * <br>
+     * In multiple-module projects must point to Maven project top-level module base directory.
+     * <br>
      * 
      * @since 1.0.0
      */
