@@ -52,6 +52,7 @@ public class SBTRunMojo
 
     /**
      * Allows SBT run to be skipped.
+     * <br>
      * 
      * @since 1.0.0
      */
@@ -74,6 +75,7 @@ public class SBTRunMojo
 
     /**
      * SBT process arguments.
+     * <br>
      * 
      * @since 1.0.0
      */
@@ -82,6 +84,7 @@ public class SBTRunMojo
 
     /**
      * SBT process JVM arguments.
+     * <br>
      * 
      * @since 1.0.0
      */
@@ -90,6 +93,7 @@ public class SBTRunMojo
 
     /**
      * SBT process execution timeout in milliseconds.
+     * <br>
      * 
      * @since 1.0.0
      */
