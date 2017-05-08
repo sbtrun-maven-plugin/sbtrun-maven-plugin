@@ -1,5 +1,7 @@
 ### About
 
+[![Join the chat at https://gitter.im/sbtrun-maven-plugin/sbtrun-maven-plugin](https://badges.gitter.im/sbtrun-maven-plugin/sbtrun-maven-plugin.svg)](https://gitter.im/sbtrun-maven-plugin/sbtrun-maven-plugin?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+
 SBT Runner Maven Plugin is a plugin for running [SBT](http://www.scala-sbt.org/) tasks as part of Maven build.
 
 Project migrated from [Google Code](https://code.google.com/p/sbtrun-maven-plugin/).
